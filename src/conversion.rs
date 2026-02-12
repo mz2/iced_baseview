@@ -104,6 +104,7 @@ pub fn baseview_to_iced_events(
                     modifiers: *iced_modifiers,
                     location,
                     text,
+                    repeat: false,
                 }));
             } else {
                 iced_events.push(IcedEvent::Keyboard(IcedKeyEvent::KeyReleased {
@@ -677,25 +678,32 @@ pub fn convert_mouse_interaction(
     use baseview::MouseCursor as BCursor;
 
     match interaction {
-        ICursor::None => BCursor::Default,
-        ICursor::Idle => BCursor::Default,
+        ICursor::None | ICursor::Hidden | ICursor::Idle => BCursor::Default,
+        ICursor::ContextMenu => BCursor::Default,
+        ICursor::Help => BCursor::Help,
         ICursor::Pointer => BCursor::Hand,
-        ICursor::Grab => BCursor::HandGrabbing,
-        ICursor::Text => BCursor::Text,
+        ICursor::Progress => BCursor::Working,
+        ICursor::Wait => BCursor::Working,
+        ICursor::Cell => BCursor::Cell,
         ICursor::Crosshair => BCursor::Crosshair,
-        ICursor::Working => BCursor::Working,
+        ICursor::Text => BCursor::Text,
+        ICursor::Alias => BCursor::Default,
+        ICursor::Copy => BCursor::Copy,
+        ICursor::Move => BCursor::Move,
+        ICursor::NoDrop => BCursor::NotAllowed,
+        ICursor::NotAllowed => BCursor::NotAllowed,
+        ICursor::Grab => BCursor::HandGrabbing,
         ICursor::Grabbing => BCursor::HandGrabbing,
         ICursor::ResizingHorizontally => BCursor::ColResize,
         ICursor::ResizingVertically => BCursor::RowResize,
         ICursor::ResizingDiagonallyUp => BCursor::NeswResize,
         ICursor::ResizingDiagonallyDown => BCursor::NwseResize,
-        ICursor::NotAllowed => BCursor::NotAllowed,
+        ICursor::ResizingColumn => BCursor::ColResize,
+        ICursor::ResizingRow => BCursor::RowResize,
+        ICursor::AllScroll => BCursor::Move,
         ICursor::ZoomIn => BCursor::ZoomIn,
         ICursor::ZoomOut => BCursor::ZoomOut,
-        ICursor::Cell => BCursor::Cell,
-        ICursor::Move => BCursor::Move,
-        ICursor::Copy => BCursor::Copy,
-        ICursor::Help => BCursor::Help,
+        _ => BCursor::Default,
     }
 }
 

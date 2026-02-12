@@ -56,7 +56,7 @@ where
     type Message: std::fmt::Debug + Send + 'static;
 
     /// The theme used to draw the [`Application`].
-    type Theme: Default + DefaultStyle;
+    type Theme: DefaultStyle;
 
     /// The [`Executor`] that will run commands and subscriptions.
     ///
@@ -213,7 +213,7 @@ where
             (settings.window.size.height * scale) as u32,
         );
 
-        iced_graphics::Viewport::with_physical_size(physical_size, scale)
+        iced_graphics::Viewport::with_physical_size(physical_size, scale as f32)
     };
 
     let (runtime_tx, runtime_rx) = mpsc::unbounded::<Action<A::Message>>();
@@ -244,7 +244,8 @@ where
     let window06 = crate::conversion::convert_window(window);
 
     let graphics_settings = settings.graphics_settings;
-    let mut compositor = runtime.block_on(C::new(graphics_settings, window06.clone()))?;
+    let shell = iced_graphics::Shell::headless();
+    let mut compositor = runtime.block_on(C::new(graphics_settings, window06.clone(), window06.clone(), shell))?;
     let surface = compositor.create_surface(
         window06,
         viewport.physical_width(),
@@ -387,7 +388,6 @@ async fn run_instance<A, C>(
                         &events,
                         state.cursor(),
                         &mut renderer,
-                        &mut clipboard,
                         &mut messages,
                     );
 
@@ -682,11 +682,11 @@ pub fn run_action<A, C>(
             messages.push(message);
         }
         Action::Clipboard(action) => match action {
-            clipboard::Action::Read { target, channel } => {
-                let _ = channel.send(clipboard.read(target));
+            clipboard::Action::Read { kind, channel } => {
+                let _ = channel.send(clipboard.read(kind));
             }
-            clipboard::Action::Write { target, contents } => {
-                clipboard.write(target, contents);
+            clipboard::Action::Write { content, channel } => {
+                let _ = channel.send(clipboard.write(content));
             }
         },
         Action::Window(action) => match action {
@@ -702,7 +702,7 @@ pub fn run_action<A, C>(
             _ => {}
         },
         Action::System(action) => match action {
-            crate::runtime::system::Action::QueryInformation(_channel) => {
+            crate::runtime::system::Action::GetInformation(_channel) => {
                 #[cfg(feature = "system")]
                 {
                     let graphics_info = compositor.fetch_information();
@@ -714,6 +714,7 @@ pub fn run_action<A, C>(
                     });
                 }
             }
+            _ => {}
         },
         Action::Widget(operation) => {
             let mut current_operation = Some(operation);
@@ -741,5 +742,6 @@ pub fn run_action<A, C>(
             let _ = window_queue.close_window();
         }
         Action::Reload => todo!(),
+        Action::Image(_) | Action::Event { .. } | Action::Tick => {}
     }
 }

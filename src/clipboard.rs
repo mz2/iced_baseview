@@ -2,9 +2,9 @@
 
 use std::cell::RefCell;
 
-use crate::core::clipboard::Kind as ClipboardKind;
+use crate::core::clipboard::{Content, Error, Kind as ClipboardKind};
 
-pub use crate::runtime::clipboard::{read, read_primary, write, write_primary};
+pub use crate::runtime::clipboard::{read, write};
 
 /// A buffer for short-term storage and transfer within and between
 /// applications.
@@ -45,56 +45,36 @@ impl Clipboard {
         }
     }
 
-    /// Reads the current content of the [`Clipboard`] as text.
-    pub fn read(&self, kind: ClipboardKind) -> Option<String> {
+    /// Reads the current content of the [`Clipboard`].
+    pub fn read(&self, kind: ClipboardKind) -> Result<Content, Error> {
         match &self.state {
             State::Connected(clipboard) => match kind {
-                ClipboardKind::Primary => match clipboard.borrow_mut().read_primary() {
-                    Some(Ok(s)) => Some(s),
-                    Some(Err(e)) => {
-                        log::error!("Failed to read from primary clipboard: {}", e);
-                        None
-                    }
-                    None => None,
-                },
-                ClipboardKind::Standard => match clipboard.borrow_mut().read() {
-                    Ok(s) => Some(s),
+                ClipboardKind::Text => match clipboard.borrow_mut().read() {
+                    Ok(s) => Ok(Content::Text(s)),
                     Err(e) => {
                         log::error!("Failed to read from clipboard: {}", e);
-                        None
+                        Err(Error::ContentNotAvailable)
                     }
                 },
+                _ => Err(Error::ContentNotAvailable),
             },
-            State::Unavailable => None,
+            State::Unavailable => Err(Error::ClipboardUnavailable),
         }
     }
 
     /// Writes the given text contents to the [`Clipboard`].
-    pub fn write(&mut self, kind: ClipboardKind, contents: String) {
+    pub fn write(&mut self, content: Content) -> Result<(), Error> {
         match &mut self.state {
-            State::Connected(clipboard) => match kind {
-                ClipboardKind::Primary => {
-                    if let Some(Err(e)) = clipboard.borrow_mut().write_primary(contents) {
-                        log::warn!("Failed to write to clipboard: {}", e);
-                    }
+            State::Connected(clipboard) => match content {
+                Content::Text(text) => {
+                    clipboard
+                        .borrow_mut()
+                        .write(text)
+                        .map_err(|_| Error::ContentNotAvailable)
                 }
-                ClipboardKind::Standard => {
-                    if let Err(e) = clipboard.borrow_mut().write(contents) {
-                        log::warn!("Failed to write to clipboard: {}", e);
-                    }
-                }
+                _ => Err(Error::ContentNotAvailable),
             },
-            State::Unavailable => {}
+            State::Unavailable => Err(Error::ClipboardUnavailable),
         }
-    }
-}
-
-impl crate::core::Clipboard for Clipboard {
-    fn read(&self, kind: ClipboardKind) -> Option<String> {
-        self.read(kind)
-    }
-
-    fn write(&mut self, kind: ClipboardKind, contents: String) {
-        self.write(kind, contents)
     }
 }
