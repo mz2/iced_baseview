@@ -433,6 +433,19 @@ async fn run_instance<A, C>(
                         window_id,
                     ));
 
+                    // Re-detect overlay state after rebuild.
+                    // `UserInterface::build` always resets `overlay` to `None`,
+                    // so widgets with active overlays (e.g. an open PickList
+                    // dropdown) would lose their overlay until the next input
+                    // event.  A zero-event `update` call re-populates the
+                    // cached overlay layout so `draw` can render it.
+                    let _ = user_interface.update(
+                        &[],
+                        state.cursor(),
+                        &mut renderer,
+                        &mut messages,
+                    );
+
                     if should_exit {
                         break;
                     }
