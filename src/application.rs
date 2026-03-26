@@ -169,7 +169,7 @@ impl DefaultStyle for Theme {
 
 /// The default [`Appearance`] of an [`Application`] with the built-in [`Theme`].
 pub fn default(theme: &Theme) -> Appearance {
-    let palette = theme.extended_palette();
+    let palette = theme.palette();
 
     Appearance {
         background_color: palette.background.base.color,
@@ -251,7 +251,7 @@ where
         viewport.physical_width(),
         viewport.physical_height(),
     );
-    let renderer = compositor.create_renderer();
+    let renderer = compositor.create_renderer(renderer::Settings::default());
 
     for font in settings.fonts {
         compositor.load_font(font);
@@ -744,11 +744,15 @@ pub fn run_action<A, C>(
                 }
             }
         }
-        Action::LoadFont { bytes, channel } => {
-            // TODO: Error handling (?)
-            compositor.load_font(bytes.clone());
-
-            let _ = channel.send(Ok(()));
+        Action::Font(font_action) => {
+            match font_action {
+                crate::runtime::font::Action::Load { bytes, channel } => {
+                    // TODO: Error handling (?)
+                    compositor.load_font(bytes.clone());
+                    let _ = channel.send(Ok(()));
+                }
+                _ => {}
+            }
         }
         Action::Exit => {
             // ignore errors when closing

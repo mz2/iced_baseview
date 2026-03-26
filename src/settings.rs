@@ -3,7 +3,7 @@ use std::{borrow::Cow, fmt::Debug};
 
 use baseview::{Size, WindowOpenOptions, WindowScalePolicy};
 
-pub use crate::graphics::Settings as GraphicsSettings;
+pub use crate::graphics::compositor::Settings as GraphicsSettings;
 
 /// The settings of an application.
 pub struct Settings {
