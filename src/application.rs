@@ -251,11 +251,13 @@ where
         viewport.physical_width(),
         viewport.physical_height(),
     );
-    let renderer = compositor.create_renderer(settings.renderer_settings);
-
+    // Load fonts BEFORE creating the renderer so the default font
+    // (e.g. "Fira Sans") is available when the renderer initialises.
     for font in settings.fonts {
         compositor.load_font(font);
     }
+
+    let renderer = compositor.create_renderer(settings.renderer_settings);
 
     let (window_queue, window_queue_rx) = WindowQueue::new();
     let event_status = Rc::new(RefCell::new(baseview::EventStatus::Ignored));
