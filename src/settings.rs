@@ -21,6 +21,9 @@ pub struct Settings {
     /// The graphics settings.
     pub graphics_settings: GraphicsSettings,
 
+    /// The renderer settings (default font, default text size).
+    pub renderer_settings: crate::core::renderer::Settings,
+
     /// The fonts to load on boot.
     pub fonts: Vec<Cow<'static, [u8]>>,
 }
@@ -35,6 +38,7 @@ impl Default for Settings {
             },
             iced_baseview: IcedBaseviewSettings::default(),
             graphics_settings: GraphicsSettings::default(),
+            renderer_settings: crate::core::renderer::Settings::default(),
             fonts: Default::default(),
         }
     }

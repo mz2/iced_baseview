@@ -251,7 +251,7 @@ where
         viewport.physical_width(),
         viewport.physical_height(),
     );
-    let renderer = compositor.create_renderer(renderer::Settings::default());
+    let renderer = compositor.create_renderer(settings.renderer_settings);
 
     for font in settings.fonts {
         compositor.load_font(font);
